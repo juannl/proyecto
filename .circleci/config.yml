@@ -1,60 +1,26 @@
-- nombre : Instalar QCA Agent en destinos Linux
-  anfitriones : todos
-  reunir_hechos : verdadero
-  usuario_remoto : " {{ ssh_user }} "
-  tareas :
+# Use the latest 2.1 version of CircleCI pipeline process engine.
+# See: https://circleci.com/docs/2.0/configuration-reference
+version: 2.1
 
-    - depuración : mensaje = {{ ansible_distribution }}
+# Define a job to be invoked later in a workflow.
+# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
+jobs:
+  say-hello:
+    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
+    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
+    docker:
+      - image: cimg/base:stable
+    # Add steps to the job
+    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
+    steps:
+      - checkout
+      - run:
+          name: "Say hello"
+          command: "echo Hello, World!"
 
-    - nombre : compruebe si Qualys Cloud Agent ya está instalado
-      comando : systemctl status qualys-cloud-agent
-      registro : init_status_result
-      ignorar_errores : sí
-
-    - nombre : Crear directorio para descargar Qualys Cloud Agent
-      sudo : si
-      sudo_user : raíz
-      archivo :
-        ruta : /usr/qualys/
-        estado : directorio
-        propietario : ec2-usuario
-        grupo : ec2-usuario
-        modo : 0777
-        recursiva : no
-
-    - nombre : Debian Descargar la última versión de Qualys Cloud Agent
-      obtener_url :
-        URL : " {{ URL }} "
-        destino : /usr/qualys/qualys-cloud-agent.x86_64.deb
-        modo : 0777
-      cuando : ansible_distribution == 'Debian' o ansible_distribution == 'Ubuntu'
-
-    - nombre : RPM Descargue la última versión de Qualys Cloud Agent
-      obtener_url :
-        URL : " {{ URL }} "
-        destino : /usr/qualys/qualys-cloud-agent.x86_64.rpm
-        modo : 0755
-      cuando : ansible_distribution == 'Redhat' o ansible_distribution == 'CentOS' o ansible_distribution == 'Amazon'
-
-    - nombre : Ejecutar el script de instalación en RPM
-      comando : rpm -ivh qualys-nube-agente.x86_64.rpm
-      convertirse en : si
-      convertirse en método : sudo
-      argumentos :
-        chdir : /usr/qualys/
-      cuando : ansible_distribution == 'RedHat'
-
-    - nombre : Ejecutar el script de instalación en Debian
-      comando : /usr/sbin/dpkg --instalar qualys-cloud-agent.x86_64.deb
-      convertirse en : si
-      convertirse en método : sudo
-      argumentos :
-        chdir : /usr/qualys
-      cuando : ansible_distribution == 'Debian'
-
-    - nombre : Ejecutar el Script de Activación
-      shell : /usr/local/qualys/cloud-agent/bin/qualys-cloud-agent.sh ActivationId={{ActivationID}} CustomerId={{CustomerID}}
-      convertirse en : si
-      convertirse en método : sudo
-
-    - local_action : wait_for host={{ ansible_ssh_host }} puerto=22 estado=iniciado
+# Invoke jobs via workflows
+# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
+workflows:
+  say-hello-workflow:
+    jobs:
+      - say-hello
